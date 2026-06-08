@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ────────────────────────────────────────
+   字体引入（OPPO Sans 三档）
+   文件已在 public/font/ 下；Regular 字重对应 OPPOSans-R.woff2
+   ──────────────────────────────────────── */
+
+@font-face {
+  font-family: 'OPPO Sans';
+  src: url('/font/OPPOSans-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'OPPO Sans';
+  src: url('/font/OPPOSans-R.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'OPPO Sans';
+  src: url('/font/OPPOSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* ────────────────────────────────────────
+   全局兜底
+   ──────────────────────────────────────── */
+
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html,
+body {
+  background: theme('colors.page');
+  color: theme('colors.ink.DEFAULT');
+  font-family: theme('fontFamily.ui');
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: contain;
+  /* 锁定视口：顶部 AppBar + 底部 TabBar 不再被内容推下去，
+     只有页面内的 ScrollContainer 可以滚 */
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* 移动端 max-width 居中（桌面端访问时使用） */
+.app-shell {
+  max-width: 480px;
+  margin-inline: auto;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 隐藏滚动条但保留滚动能力（治愈系不要灰色 scrollbar） */
+.scroll-soft {
+  scrollbar-width: none;
+}
+.scroll-soft::-webkit-scrollbar {
+  display: none;
+}
+
+/* 选中态柔和暖色 */
+::selection {
+  background: theme('colors.brand.soft');
+  color: theme('colors.ink.DEFAULT');
+}
+
+/* ────────────────────────────────────────
+   背景装饰飘动（DecorBackground 用）
+   --rot 是旋转角度，--float-* 控制时长与延迟（CSS 变量传入）
+   ──────────────────────────────────────── */
+@keyframes float {
+  0%, 100% {
+    transform: rotate(var(--rot, 0deg)) translateY(0);
+  }
+  50% {
+    transform: rotate(var(--rot, 0deg)) translateY(-8px);
+  }
+}
+.animate-float {
+  animation: float var(--float-duration, 10s) ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+  will-change: transform;
+}
+
+/* ────────────────────────────────────────
+   粒子缓慢上升（Particles 用）
+   像阳光下的小尘埃，慢慢飘起又消失
+   ──────────────────────────────────────── */
+@keyframes particle-drift {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--particle-opacity, 0.35);
+  }
+  85% {
+    opacity: var(--particle-opacity, 0.35);
+  }
+  100% {
+    transform: translate(var(--particle-drift, 30px), -260px);
+    opacity: 0;
+  }
+}
+.animate-particle {
+  animation: particle-drift var(--particle-duration, 18s) linear infinite;
+  animation-delay: var(--particle-delay, 0s);
+  will-change: transform, opacity;
+}
+
+/* ────────────────────────────────────────
+   精灵图 6 帧循环动画
+   原图：3 列 × 2 行 = 6 帧
+   实现：把容器视作单帧大小，background-size: 300% 200%
+         （让原图相对容器放大 3×/2× 倍），
+         然后 keyframes 切 6 个 position 跳帧。
+   每帧持续 1/6 周期，靠 % 双标记实现"持帧 + 瞬切"。
+   ──────────────────────────────────────── */
+@keyframes spriteCycle {
+  0%,    15.99% { background-position: 0% 0%; }    /* 第 1 帧 col0 row0 */
+  16%,   32.99% { background-position: 50% 0%; }   /* 第 2 帧 col1 row0 */
+  33%,   49.99% { background-position: 100% 0%; }  /* 第 3 帧 col2 row0 */
+  50%,   66.99% { background-position: 0% 100%; }  /* 第 4 帧 col0 row1 */
+  67%,   83.99% { background-position: 50% 100%; } /* 第 5 帧 col1 row1 */
+  84%,   100%   { background-position: 100% 100%; }/* 第 6 帧 col2 row1 */
+}
+
+.sprite-anim {
+  animation-name: spriteCycle;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}

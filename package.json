@@ -1,0 +1,39 @@
+{
+  "name": "qichi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "栖迟 - 给求职路上的人一个暂时停靠的地方",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "dexie": "^4.0.10",
+    "dexie-react-hooks": "^1.1.7",
+    "openai": "^4.73.0",
+    "framer-motion": "^12.0.0",
+    "recharts": "^2.15.0",
+    "@phosphor-icons/react": "^2.1.7",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.0",
+    "date-fns": "^4.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.49",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.15.0",
+    "eslint-config-next": "^15.0.0"
+  }
+}
