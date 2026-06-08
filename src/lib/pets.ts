@@ -7,7 +7,8 @@
  * 加新宠物 = 在 PETS 加一行；无需散弹改 db/prompts/llm/assets。
  */
 
-import type { PetType, PetName, PetPose } from './db';
+import type { PetType, PetName } from './db';
+import type { PetPose } from '@/types';
 import {
   buildCatSystemPrompt,
   buildDogSystemPrompt,
