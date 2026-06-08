@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCurrentPet } from '@/hooks/useCurrentPet';
 import { BACKGROUNDS, ICONS } from '@/lib/assets';
+import { PETS } from '@/lib/pets';
 import { BgImage } from './BgImage';
 
 /**
@@ -109,10 +110,8 @@ export function DecorBackground() {
   if (theme === 'me') return <BgImage src={BACKGROUNDS.settings} />;
 
   // 小本本 / 曲线 继续用动画装饰
-  const paws =
-    pet?.pet === 'dog'
-      ? [ICONS.deco.pawDog1, ICONS.deco.pawDog2]
-      : [ICONS.deco.pawCat1, ICONS.deco.pawCat2, ICONS.deco.pawCat3];
+  // 爪印路径从 PETS 表读（/simplify 重构后从 ICONS 移到 PETS[pet].paws）
+  const paws = PETS[pet?.pet ?? 'cat'].paws;
 
   const items = getItems(theme, paws);
 
