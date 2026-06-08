@@ -39,6 +39,7 @@ export const PETS: Record<PetType, PetProfile> = {
     name: '栖栖',
     call: '喵～',
     sprites: {
+      sleep: '/pets/cat-sleep.png',
       idle: '/pets/cat-idle.png',
       listen: '/pets/cat-listen.png',
       empathy: '/pets/cat-empathy.png',
@@ -56,6 +57,7 @@ export const PETS: Record<PetType, PetProfile> = {
     name: '迟迟',
     call: '汪～',
     sprites: {
+      sleep: '/pets/dog-sleep.png',
       idle: '/pets/dog-idle.png',
       listen: '/pets/dog-listen.png',
       empathy: '/pets/dog-empathy.png',
