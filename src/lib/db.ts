@@ -74,7 +74,22 @@ export interface Settings {
   pet: PetType;
   name: PetName;
   createdAt: number;
+  /** 用户自带 OpenAI 兼容 API key（仅存本机 IndexedDB，不上传） */
+  openaiKey?: string;
+  /** OpenAI 兼容代理地址（如 https://api.chatanywhere.tech/v1），留空走官方 */
+  openaiBaseUrl?: string;
+  /** 主力模型，默认 gpt-4o-mini */
+  openaiModelMain?: string;
+  /** 快速模型（情绪/NER 抽取用），默认 gpt-4o-mini */
+  openaiModelFast?: string;
 }
+
+export type LLMConfigPatch = Partial<
+  Pick<
+    Settings,
+    'openaiKey' | 'openaiBaseUrl' | 'openaiModelMain' | 'openaiModelFast'
+  >
+>;
 
 // ─── 数据库 ─────────────────────────────────
 
@@ -105,6 +120,13 @@ export const db = new QiChiDB();
 
 export async function getCurrentPet(): Promise<Settings | undefined> {
   return db.settings.orderBy('id').first();
+}
+
+/** 部分更新当前 settings 行的 LLM 字段 */
+export async function updateLLMConfig(patch: LLMConfigPatch): Promise<void> {
+  const current = await db.settings.orderBy('id').first();
+  if (!current?.id) return;
+  await db.settings.update(current.id, patch);
 }
 
 export async function setCurrentPet(pet: PetType): Promise<void> {

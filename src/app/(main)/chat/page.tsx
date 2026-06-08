@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AppBar } from '@/components/layout/AppBar';
 import { Icon } from '@/components/ui/Icon';
 import { PetStage } from '@/components/chat/PetStage';
@@ -19,7 +20,13 @@ import { addReview } from '@/lib/reviews';
 import { PETS } from '@/lib/pets';
 import { pickRandomGreeting } from '@/lib/prompts';
 import { ICONS } from '@/lib/assets';
+import {
+  translateMessage as clientTranslate,
+  silentExtract as clientExtract,
+  MissingLLMConfigError,
+} from '@/lib/llm-client';
 import { useRecentEmotion } from '@/hooks/useRecentEmotion';
+import { useLLMConfig } from '@/hooks/useLLMConfig';
 import type { PetPose } from '@/types';
 import { resolvePetPose } from '@/types';
 
@@ -30,9 +37,11 @@ export default function ChatPage() {
   const [failedId, setFailedId] = useState<number | undefined>();
   const [sending, setSending] = useState(false);
 
+  const router = useRouter();
   const greeting = useMemo(() => pickRandomGreeting(), []);
   const recentEmotionScore = useRecentEmotion();
   const [isTyping, setIsTyping] = useState(false);
+  const { config: llmConfig, configured: llmConfigured } = useLLMConfig();
 
   if (!pet) return null;
   const profile = PETS[pet.pet];
@@ -59,54 +68,30 @@ export default function ChatPage() {
     }
   };
 
-  /** 调 /api/extract → 把情绪标签 + 面试要素落到本地 DB */
+  /** 客户端直接调 LLM 抽取情绪 + NER，落本地 DB；无 key / 失败都静默 */
   async function runSilentExtract(messageId: number, text: string) {
+    if (!llmConfigured) return; // 没填 key 直接跳过，不打扰
     try {
-      const res = await fetch('/api/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) {
-        console.warn('[extract] non-200', res.status);
-        return;
-      }
-      const data = (await res.json()) as {
-        emotion?: {
-          tags: string[];
-          score: number;
-          confidence: number;
-        };
-        ner?: {
-          jobPosition?: string;
-          company?: string;
-          interviewStage?: string;
-          questions?: string[];
-          mistakes?: string[];
-          strengths?: string[];
-          dateHint?: string;
-        } | null;
-      };
-
-      if (data.emotion) {
+      const { emotion, ner } = await clientExtract(llmConfig, text);
+      if (emotion) {
         await addEmotion({
           messageId,
-          tags: data.emotion.tags as never,
-          score: data.emotion.score,
-          confidence: data.emotion.confidence,
+          tags: emotion.tags,
+          score: emotion.score,
+          confidence: emotion.confidence,
           createdAt: Date.now(),
         });
       }
-      if (data.ner) {
+      if (ner) {
         await addReview({
           messageId,
-          jobPosition: data.ner.jobPosition,
-          company: data.ner.company,
-          interviewStage: data.ner.interviewStage,
-          questions: data.ner.questions ?? [],
-          mistakes: data.ner.mistakes ?? [],
-          strengths: data.ner.strengths ?? [],
-          dateHint: data.ner.dateHint,
+          jobPosition: ner.jobPosition,
+          company: ner.company,
+          interviewStage: ner.interviewStage,
+          questions: ner.questions ?? [],
+          mistakes: ner.mistakes ?? [],
+          strengths: ner.strengths ?? [],
+          dateHint: ner.dateHint,
         });
       }
     } catch (e) {
@@ -118,7 +103,6 @@ export default function ChatPage() {
     setFailedId(undefined);
     setTranslatingId(messageId);
     try {
-      // 找到这条 pet 消息对应的"上一条 user 消息"作为翻译来源
       const idx = messages.findIndex((m) => m.id === messageId);
       const sourceUser = [...messages]
         .slice(0, idx)
@@ -129,31 +113,20 @@ export default function ChatPage() {
         return;
       }
 
-      const res = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: sourceUser.text,
-          petType: pet.pet,
-          petName: pet.name,
-        }),
+      const translated = await clientTranslate(llmConfig, {
+        userMessage: sourceUser.text,
+        petType: pet.pet,
+        petName: pet.name,
       });
-      if (!res.ok) {
-        // 解析错误体，把后端真实错误吐到 console
-        const errBody = await res.json().catch(() => ({}));
-        console.error('[translate] server error', {
-          status: res.status,
-          ...errBody,
-        });
-        throw new Error(
-          `HTTP ${res.status}${errBody.detail ? `: ${errBody.detail}` : ''}`,
-        );
-      }
-      const data = (await res.json()) as { translated?: string };
-      if (!data.translated) throw new Error('empty');
-      await setPetTranslation(messageId, data.translated);
+      if (!translated) throw new Error('empty');
+      await setPetTranslation(messageId, translated);
     } catch (e) {
       console.error('[translate] failed', e);
+      if (e instanceof MissingLLMConfigError) {
+        // 没填 key：跳转到设置页
+        router.push('/settings#llm');
+        return;
+      }
       setFailedId(messageId);
     } finally {
       setTranslatingId(undefined);
@@ -184,6 +157,17 @@ export default function ChatPage() {
       <div className="pt-2">
         <PetStage pet={pet.pet} pose={pose} />
       </div>
+
+      {/* 没配 key 的引导提示 */}
+      {!llmConfigured && (
+        <div className="mx-5 mb-2 rounded-card bg-brand-pale px-4 py-3 text-caption text-ink">
+          想让 {pet.name} 跟你说人话？请先在{' '}
+          <Link href="/settings#llm" className="text-brand underline">
+            「我 → AI 配置」
+          </Link>{' '}
+          填好 API key。
+        </div>
+      )}
 
       {/* 对话气泡流 */}
       <MessageList

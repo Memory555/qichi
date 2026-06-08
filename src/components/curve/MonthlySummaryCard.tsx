@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { useCurrentPet } from '@/hooks/useCurrentPet';
+import { useLLMConfig } from '@/hooks/useLLMConfig';
+import { generateMonthlySummary } from '@/lib/llm-client';
 import {
   buildMonthlyInput,
   readSummaryCache,
@@ -19,6 +21,7 @@ import {
  */
 export function MonthlySummaryCard() {
   const { pet } = useCurrentPet();
+  const { config: llmConfig, configured: llmConfigured } = useLLMConfig();
   const [summary, setSummary] = useState<string>('');
   const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'skip'>(
     'idle',
@@ -39,34 +42,28 @@ export function MonthlySummaryCard() {
         return;
       }
 
-      // 2. 算月度输入；数据太少就跳过
+      // 2. 算月度输入；数据太少 / 没填 key 都跳过
       const input = await buildMonthlyInput();
-      if (!input || input.totalMessages < 5) {
+      if (!input || input.totalMessages < 5 || !llmConfigured) {
         if (!cancelled) setState('skip');
         return;
       }
 
-      // 3. 调 /api/monthly
+      // 3. 客户端直接调 OpenAI 兼容接口
       if (!cancelled) setState('loading');
       try {
-        const res = await fetch('/api/monthly', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            petType: pet.pet,
-            petName: pet.name,
-            emotionTimeline: input.emotionTimeline,
-            interviewDigest: input.interviewDigest,
-            totalDays: input.totalDays,
-            totalMessages: input.totalMessages,
-          }),
+        const text = await generateMonthlySummary(llmConfig, {
+          petType: pet.pet,
+          petName: pet.name,
+          emotionTimeline: input.emotionTimeline,
+          interviewDigest: input.interviewDigest,
+          totalDays: input.totalDays,
+          totalMessages: input.totalMessages,
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as { summary?: string };
-        if (data.summary) {
-          writeSummaryCache(data.summary);
+        if (text) {
+          writeSummaryCache(text);
           if (!cancelled) {
-            setSummary(data.summary);
+            setSummary(text);
             setState('ready');
           }
         }
@@ -79,7 +76,7 @@ export function MonthlySummaryCard() {
     return () => {
       cancelled = true;
     };
-  }, [pet]);
+  }, [pet, llmConfigured, llmConfig]);
 
   if (state === 'idle' || state === 'skip') return null;
 
