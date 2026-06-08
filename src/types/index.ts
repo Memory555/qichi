@@ -27,11 +27,13 @@ export type ChatState = 'idle' | 'sending' | 'translating' | 'error';
 /**
  * 宠物姿态
  *
- * MVP 三态：idle / listen / empathy（对应已绑定的精灵图）。
- * "趴睡" 精灵图 PNG 保留在 public/pets/，但不进入类型/状态机；
- * 启用夜间模式时再扩展此 union 与 PETS 表。
+ * 四态：sleep / idle / listen / empathy（均已绑定精灵图）。
+ * - sleep:   聊天页默认静默态（宠物趴睡）
+ * - idle:    宠物选择页 / 唤醒待机态
+ * - listen:  用户正在输入
+ * - empathy: 用户最近情绪低落
  */
-export type PetPose = 'idle' | 'listen' | 'empathy';
+export type PetPose = 'sleep' | 'idle' | 'listen' | 'empathy';
 
 export type MoodColor = 'warm' | 'pink' | 'blue' | 'green' | 'purple';
 
@@ -46,12 +48,14 @@ export const EMPATHY_SCORE_THRESHOLD = 3;
 // ─── 宠物姿态状态机 ────────────────────────
 
 /**
- * 决定宠物当前应该显示哪个姿态。
+ * 决定宠物当前应该显示哪个姿态（聊天页用）。
  *
  * 优先级：
  * 1. 用户正在输入（focus 或非空 input）→ listen
  * 2. 最近一条用户消息情绪分值 ≤ EMPATHY_SCORE_THRESHOLD → empathy
- * 3. 默认 → idle
+ * 3. 默认 → sleep（聊天页静默态：宠物趴睡，等你来叫醒它）
+ *
+ * 注：宠物选择页直接读 `profile.sprites.idle`，不走本函数。
  */
 export function resolvePetPose(opts: {
   isUserTyping: boolean;
@@ -64,5 +68,5 @@ export function resolvePetPose(opts: {
   ) {
     return 'empathy';
   }
-  return 'idle';
+  return 'sleep';
 }

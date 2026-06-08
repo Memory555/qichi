@@ -12,6 +12,7 @@ interface Props {
 }
 
 const CYCLE_MS: Record<PetPose, number> = {
+  sleep: 3200, // 趴睡呼吸节奏（慢于 idle，更深沉）
   idle: 2400,
   listen: 1500,
   empathy: 2000,
@@ -21,7 +22,7 @@ const CYCLE_MS: Record<PetPose, number> = {
  * 宠物舞台。
  *
  * - 精灵图本身用 CSS `.sprite-anim` 跳 6 帧（详见 globals.css）
- * - 姿态切换（idle / listen / empathy）由 Framer Motion 用 key 变化
+ * - 姿态切换（sleep / idle / listen / empathy）由 Framer Motion 用 key 变化
  *   做交叉淡入（opacity 0.5 → 1，约 200ms），避免硬切
  */
 export function PetStage({ pet, pose, className }: Props) {
