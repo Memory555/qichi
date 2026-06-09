@@ -4,19 +4,24 @@
   "private": true,
   "description": "栖迟 - 给求职路上的人一个暂时停靠的地方",
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
+    "dev": "next dev",
     "build:apk": "cross-env BUILD_TARGET=static next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "cap:sync": "npm run build:apk && npx cap sync",
-    "cap:android": "npm run cap:sync && npx cap open android"
+    "cap:android": "npm run cap:sync && npx cap open android",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",
+    "@opennextjs/cloudflare": "^1.19.11",
     "@phosphor-icons/react": "^2.1.7",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -42,6 +47,7 @@
     "eslint-config-next": "^15.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "wrangler": "^4.98.0"
   }
 }
