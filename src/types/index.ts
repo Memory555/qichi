@@ -15,6 +15,7 @@ export type {
   Message,
   Emotion,
   Review,
+  Interview,
   Settings,
 } from '@/lib/db';
 

@@ -8,7 +8,12 @@
  * 宠物身份维度（name/call/icon/...）的聚合配置见 `./pets.ts`。
  */
 
-import type { PetName, PetType } from './db';
+import type { PetType } from './db';
+
+/**
+ * v2：所有 prompt 构造函数的 petName 参数放宽为 string，
+ * 以接受用户自定义昵称（不再受 PetName 字面量约束）。
+ */
 
 // ─── few-shot 共享 shape ────────────────────
 
@@ -19,7 +24,7 @@ export interface FewShotExample {
 
 // ─── P1-CAT · 共情对话（猫）─────────────────
 
-const buildCatSystemPromptImpl = (petName: PetName) => `
+const buildCatSystemPromptImpl = (petName: string) => `
 你是一只叫 ${petName} 的橘猫，正陪着一位刚结束面试、心情不太好的人。
 
 【你的性格】
@@ -47,11 +52,15 @@ const buildCatSystemPromptImpl = (petName: PetName) => `
 直接输出你想说的话，不要带任何前缀、不要 markdown 标记。
 `.trim();
 
-// 宠物名字只有 2 个固定值（栖栖/迟迟），启动时预构 system prompt，
-// 之后 translate 调用直接读 map。
-const CAT_SYSTEM_CACHE: Partial<Record<PetName, string>> = {};
-export const buildCatSystemPrompt = (petName: PetName): string =>
-  (CAT_SYSTEM_CACHE[petName] ??= buildCatSystemPromptImpl(petName));
+// v2：用户可自定义昵称，cache key 改为 Map<string,string>
+const CAT_SYSTEM_CACHE = new Map<string, string>();
+export const buildCatSystemPrompt = (petName: string): string => {
+  const cached = CAT_SYSTEM_CACHE.get(petName);
+  if (cached) return cached;
+  const built = buildCatSystemPromptImpl(petName);
+  CAT_SYSTEM_CACHE.set(petName, built);
+  return built;
+};
 
 export const CAT_FEW_SHOT: ReadonlyArray<FewShotExample> = [
   {
@@ -70,7 +79,7 @@ export const CAT_FEW_SHOT: ReadonlyArray<FewShotExample> = [
 
 // ─── P1-DOG · 共情对话（狗）─────────────────
 
-const buildDogSystemPromptImpl = (petName: PetName) => `
+const buildDogSystemPromptImpl = (petName: string) => `
 你是一只叫 ${petName} 的柴犬，正陪着一位刚结束面试、心情不太好的人。
 
 【你的性格】
@@ -98,9 +107,14 @@ const buildDogSystemPromptImpl = (petName: PetName) => `
 直接输出你想说的话，不要带任何前缀、不要 markdown 标记。
 `.trim();
 
-const DOG_SYSTEM_CACHE: Partial<Record<PetName, string>> = {};
-export const buildDogSystemPrompt = (petName: PetName): string =>
-  (DOG_SYSTEM_CACHE[petName] ??= buildDogSystemPromptImpl(petName));
+const DOG_SYSTEM_CACHE = new Map<string, string>();
+export const buildDogSystemPrompt = (petName: string): string => {
+  const cached = DOG_SYSTEM_CACHE.get(petName);
+  if (cached) return cached;
+  const built = buildDogSystemPromptImpl(petName);
+  DOG_SYSTEM_CACHE.set(petName, built);
+  return built;
+};
 
 export const DOG_FEW_SHOT: ReadonlyArray<FewShotExample> = [
   {
@@ -172,7 +186,7 @@ export const NER_SYSTEM_PROMPT = `
 
 // ─── P5 · 月度总结 ──────────────────────────
 
-const buildMonthlySummaryPromptImpl = (petName: PetName, petType: PetType) =>
+const buildMonthlySummaryPromptImpl = (petName: string, petType: PetType) =>
   `
 你是用户的网友 ${petName}（一只${petType === 'cat' ? '猫' : '狗'}），过去一个月你陪 ta 经历了一些面试。
 
@@ -196,7 +210,7 @@ const buildMonthlySummaryPromptImpl = (petName: PetName, petType: PetType) =>
 
 const MONTHLY_CACHE = new Map<string, string>();
 export const buildMonthlySummaryPrompt = (
-  petName: PetName,
+  petName: string,
   petType: PetType,
 ): string => {
   const key = `${petType}|${petName}`;

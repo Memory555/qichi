@@ -7,6 +7,7 @@ import { Icon } from '@/components/ui/Icon';
 import { ICONS } from '@/lib/assets';
 import { deleteReview, setReviewHidden } from '@/lib/reviews';
 import { ReviewDetail } from './ReviewDetail';
+import { ReviewEditForm } from './ReviewEditForm';
 import type { Review } from '@/types';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 
 function formatDate(ts: number): string {
   const d = new Date(ts);
-  return `${d.getMonth() + 1}.${d.getDate()}`;
+  return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
 }
 
 function headerLine(r: Review): string {
@@ -42,11 +43,16 @@ function Section({ title, items }: { title: string; items: string[] }) {
 export function ReviewCard({ review }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const isHidden = review.hidden;
 
   const handleDetail = () => {
     setMenuOpen(false);
     setDetailOpen(true);
+  };
+  const handleEdit = () => {
+    setMenuOpen(false);
+    setEditOpen(true);
   };
   const handleHide = async () => {
     await setReviewHidden(review.id!, true);
@@ -113,11 +119,11 @@ export function ReviewCard({ review }: Props) {
 
           <button
             type="button"
-            disabled
-            className="flex h-12 w-full items-center rounded-card px-4 text-body-ui text-ink-mute"
+            onClick={handleEdit}
+            className="flex h-12 w-full items-center rounded-card px-4 text-body-ui text-ink hover:bg-subtle"
           >
             <Icon src={ICONS.action.edit} size={20} alt="" />
-            <span className="ml-3">编辑（即将上线）</span>
+            <span className="ml-3">编辑</span>
           </button>
 
           {isHidden ? (
@@ -155,6 +161,13 @@ export function ReviewCard({ review }: Props) {
       <BottomSheet open={detailOpen} onClose={() => setDetailOpen(false)}>
         <ReviewDetail review={review} />
       </BottomSheet>
+
+      {/* 编辑：可改公司 / 岗位 / 轮次 + 三个数组字段 */}
+      <ReviewEditForm
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        review={review}
+      />
     </>
   );
 }

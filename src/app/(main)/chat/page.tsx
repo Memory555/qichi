@@ -4,10 +4,12 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppBar } from '@/components/layout/AppBar';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Icon } from '@/components/ui/Icon';
 import { PetStage } from '@/components/chat/PetStage';
 import { MessageList } from '@/components/chat/MessageList';
 import { MessageInput } from '@/components/chat/MessageInput';
+import { MonthlyHintBanner } from '@/components/chat/MonthlyHintBanner';
 import { useCurrentPet } from '@/hooks/useCurrentPet';
 import { useMessages } from '@/hooks/useMessages';
 import {
@@ -17,9 +19,8 @@ import {
 } from '@/lib/messages';
 import { addEmotion } from '@/lib/emotions';
 import { addReview } from '@/lib/reviews';
-import { PETS } from '@/lib/pets';
+import { PETS, getDisplayName } from '@/lib/pets';
 import { pickRandomGreeting } from '@/lib/prompts';
-import { ICONS } from '@/lib/assets';
 import {
   translateMessage as clientTranslate,
   silentExtract as clientExtract,
@@ -45,6 +46,7 @@ export default function ChatPage() {
 
   if (!pet) return null;
   const profile = PETS[pet.pet];
+  const displayName = getDisplayName(pet);
 
   // 姿态优先级：输入框正在输入 / 正在发送 → listen
   //              最近情绪分值 ≤ 3 → empathy
@@ -116,7 +118,7 @@ export default function ChatPage() {
       const translated = await clientTranslate(llmConfig, {
         userMessage: sourceUser.text,
         petType: pet.pet,
-        petName: pet.name,
+        petName: displayName,
       });
       if (!translated) throw new Error('empty');
       await setPetTranslation(messageId, translated);
@@ -138,19 +140,11 @@ export default function ChatPage() {
       <AppBar
         left={
           <div className="flex items-center gap-2">
-            <Icon src={profile.avatar} size={32} alt={pet.name} />
-            <span className="text-h3 text-ink">{pet.name}</span>
+            <Icon src={profile.avatar} size={32} alt={displayName} />
+            <span className="text-h3 text-ink">{displayName}</span>
           </div>
         }
-        right={
-          <Link
-            href="/settings"
-            aria-label="设置"
-            className="flex h-8 w-8 items-center justify-center"
-          >
-            <Icon src={ICONS.action.filter} size={22} alt="设置" />
-          </Link>
-        }
+        right={<ThemeToggle />}
       />
 
       {/* 顶部宠物形象区 */}
@@ -158,10 +152,13 @@ export default function ChatPage() {
         <PetStage pet={pet.pet} pose={pose} />
       </div>
 
+      {/* 月度总结提示（条件触发） */}
+      <MonthlyHintBanner petName={displayName} petType={pet.pet} />
+
       {/* 没配 key 的引导提示 */}
       {!llmConfigured && (
         <div className="mx-5 mb-2 rounded-card bg-brand-pale px-4 py-3 text-caption text-ink">
-          想让 {pet.name} 跟你说人话？请先在{' '}
+          想让 {displayName} 跟你说人话？请先在{' '}
           <Link href="/settings#llm" className="text-brand underline">
             「我 → AI 配置」
           </Link>{' '}
@@ -180,7 +177,7 @@ export default function ChatPage() {
 
       {/* 输入区 */}
       <MessageInput
-        placeholder={`跟${pet.name}说说...`}
+        placeholder={`跟${displayName}说说...`}
         disabled={sending}
         onSend={handleSend}
         onTypingChange={setIsTyping}

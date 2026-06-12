@@ -106,8 +106,13 @@ export function DecorBackground() {
   const { pet } = useCurrentPet();
 
   // 聊天页 / 设置页 用整页背景图（背景图自带云朵爪印氛围，关掉动画装饰避免叠加）
-  if (theme === 'chat') return <BgImage src={BACKGROUNDS.chat} />;
-  if (theme === 'me') return <BgImage src={BACKGROUNDS.settings} />;
+  // v2 GA：暗色专版已就位，BgImage 内部按 theme 切换
+  if (theme === 'chat')
+    return <BgImage src={BACKGROUNDS.chat} srcDark={BACKGROUNDS.chatDark} />;
+  if (theme === 'me')
+    return (
+      <BgImage src={BACKGROUNDS.settings} srcDark={BACKGROUNDS.settingsDark} />
+    );
 
   // 小本本 / 曲线 继续用动画装饰
   // 爪印路径从 PETS 表读（/simplify 重构后从 ICONS 移到 PETS[pet].paws）
