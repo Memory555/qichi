@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>栖迟 · 欢迎页</title>
+<style>
+  /* ──────────────────────────────────────────
+     字体（OPPO Sans 三档）+ 诗经引用宋体
+     ────────────────────────────────────────── */
+  @font-face {
+    font-family: 'OPPO Sans';
+    src: url('../font/OPPOSans-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'OPPO Sans';
+    src: url('../font/OPPOSans-R.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'OPPO Sans';
+    src: url('../font/OPPOSans-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+  }
+
+  /* ── 设计 tokens（对应 tailwind.config）── */
+  :root {
+    --brand:      #F5A65B;
+    --brand-deep: #E8893A;
+    --brand-soft: #FCD9A8;
+    --page:       #FFF8EE;
+    --ink:        #5A3E2B;
+    --ink-soft:   #9C8472;
+    --ink-mute:   #C9BAA8;
+    --ink-on:     #FFF8EE;
+    --shadow-lg:  0 8px 24px rgba(245, 166, 91, 0.16);
+    --ease-soft:  cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: #EDE3D2;
+    font-family: 'OPPO Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 居中的移动端画框（桌面预览时） */
+  .frame {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    min-height: 100dvh;
+    margin-inline: auto;
+    overflow: hidden;
+    background: var(--page);
+  }
+
+  /* 背景插画（猫狗 / 月亮 / 云朵 / 落叶 / 脚印） */
+  .bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 0;
+  }
+
+  /* 内容层 */
+  .content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 56px 28px calc(40px + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+  }
+
+  /* ── 顶部：栖迟艺术字 + 诗经引用 ── */
+  .head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: fade-down 800ms var(--ease-soft) both;
+  }
+  .wordmark {
+    width: 200px;
+    height: auto;
+    /* idle 呼吸感 */
+    animation: breath 5s ease-in-out infinite;
+  }
+  .cite {
+    font-family: 'Source Han Serif', 'Songti SC', STSong, serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  /* 中部留白，让插画呼吸 */
+  .spacer { flex: 1; }
+
+  /* ── 底部：tagline + CTA + 隐私 ── */
+  .foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    animation: fade-up 800ms var(--ease-soft) 200ms both;
+  }
+  .tagline {
+    margin-bottom: 6px;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--ink);
+    letter-spacing: 0.06em;
+  }
+  .cta {
+    width: 232px;
+    height: 52px;
+    border: none;
+    border-radius: 9999px;
+    background: var(--brand);
+    color: var(--ink-on);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    transition: background 220ms var(--ease-soft), transform 220ms var(--ease-soft);
+  }
+  .cta:hover  { background: var(--brand-deep); }
+  .cta:active { background: var(--brand-deep); transform: scale(0.98); }
+  .privacy {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── 动画 ── */
+  @keyframes breath {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.02); }
+  }
+  @keyframes fade-down {
+    0%   { opacity: 0; transform: translateY(-12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-up {
+    0%   { opacity: 0; transform: translateY(16px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <!-- 背景插画：猫狗双陪伴 + 月亮 / 云朵 / 落叶 / 脚印 -->
+    <img class="bg" src="../background/欢迎页.png" alt="" aria-hidden="true" />
+
+    <div class="content">
+      <!-- 顶部 -->
+      <header class="head">
+        <img class="wordmark" src="../brand/qichi-wordmark.png" alt="栖迟" />
+        <p class="cite">「衡门之下，可以栖迟。 —— 《诗经·陈风·衡门》」</p>
+      </header>
+
+      <div class="spacer"></div>
+
+      <!-- 底部 -->
+      <footer class="foot">
+        <p class="tagline">给求职路上的人一个暂时停靠的地方</p>
+        <button class="cta" type="button">进来坐坐</button>
+        <p class="privacy">数据只保存在你自己的设备上</p>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
