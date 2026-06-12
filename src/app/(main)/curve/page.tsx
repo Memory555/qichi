@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { AppBar } from '@/components/layout/AppBar';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { MoodChart } from '@/components/curve/MoodChart';
 import { MonthlySummaryCard } from '@/components/curve/MonthlySummaryCard';
+import { EmotionCards } from '@/components/curve/EmotionCards';
 import { useEmotionTimeline } from '@/hooks/useEmotionTimeline';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +34,10 @@ export default function CurvePage() {
 
   return (
     <>
-      <AppBar left={<span className="text-h3 text-ink">心境</span>} />
+      <AppBar
+        left={<span className="text-h3 text-ink">心境</span>}
+        right={<ThemeToggle />}
+      />
 
       <div className="scroll-soft flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {/* 时间范围切换 */}
@@ -91,6 +96,9 @@ export default function CurvePage() {
 
         {/* 月度网友体总结（本月数据 ≥ 5 条才出现） */}
         <MonthlySummaryCard />
+
+        {/* 情绪卡片：按日聚合（与 range 联动） */}
+        <EmotionCards days={range} />
       </div>
     </>
   );

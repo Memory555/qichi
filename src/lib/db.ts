@@ -69,10 +69,39 @@ export interface Review {
   createdAt: number;
 }
 
+/**
+ * v2.1：面试日程（用户主动添加，与 review 完全独立）。
+ *
+ * 与 Review 的区别：
+ * - Review = 已发生 + AI 从聊天自动抽取
+ * - Interview = 计划/未来 + 用户主动添加
+ *
+ * 二者可能描述同一场面试，但本期不强制 link —— 视觉上同日同卡，
+ * 用户自己识别就好；强连接留给 v3。
+ */
+export interface Interview {
+  id?: number;
+  /** 用户输入的面试时间（含时分） */
+  scheduledAt: number;
+  company?: string;
+  jobPosition?: string;
+  interviewStage?: string;
+  notes?: string;
+  /** 用户标记"已完成"的时间戳；undefined 表示还没到/没完成 */
+  completedAt?: number;
+  createdAt: number;
+}
+
 export interface Settings {
   id?: number;
   pet: PetType;
+  /** 品牌名（不可改）：cat→栖栖，dog→迟迟。保留用于"叫回原名"兜底 */
   name: PetName;
+  /**
+   * v2：用户自定义昵称。显示统一走 `getDisplayName()`：
+   *   trim 后非空 → 用 customName，否则回落到 name
+   */
+  customName?: string;
   createdAt: number;
   /** 用户自带 OpenAI 兼容 API key（仅存本机 IndexedDB，不上传） */
   openaiKey?: string;
@@ -98,9 +127,12 @@ class QiChiDB extends Dexie {
   emotions!: Table<Emotion, number>;
   reviews!: Table<Review, number>;
   settings!: Table<Settings, number>;
+  /** v2.1 新增：用户主动添加的面试日程 */
+  interviews!: Table<Interview, number>;
 
   constructor() {
     super('qichi');
+    // v1 schema（保留以保证老用户能自动升级）
     this.version(1).stores({
       // 索引说明：
       // ++id：自增主键
@@ -110,6 +142,10 @@ class QiChiDB extends Dexie {
       emotions: '++id, messageId, createdAt, *tags',
       reviews: '++id, messageId, company, jobPosition, hidden, createdAt',
       settings: '++id',
+    });
+    // v2 schema：加 interviews 表；其它表不动 → 老用户数据 0 迁移
+    this.version(2).stores({
+      interviews: '++id, scheduledAt, completedAt',
     });
   }
 }
@@ -129,6 +165,19 @@ export async function updateLLMConfig(patch: LLMConfigPatch): Promise<void> {
   await db.settings.update(current.id, patch);
 }
 
+/**
+ * v2：更新宠物自定义昵称。空字符串/纯空白 → 清除昵称，叫回品牌名。
+ * 不需要 dexie schema 升级，customName 不参与索引。
+ */
+export async function updateCustomName(name: string): Promise<void> {
+  const current = await db.settings.orderBy('id').first();
+  if (!current?.id) return;
+  const trimmed = name.trim();
+  await db.settings.update(current.id, {
+    customName: trimmed || undefined,
+  });
+}
+
 export async function setCurrentPet(pet: PetType): Promise<void> {
   // 动态 import 避免 db ↔ pets 循环
   const { PETS } = await import('./pets');
@@ -145,12 +194,13 @@ export async function setCurrentPet(pet: PetType): Promise<void> {
 export async function resetAllData(): Promise<void> {
   await db.transaction(
     'rw',
-    [db.messages, db.emotions, db.reviews, db.settings],
+    [db.messages, db.emotions, db.reviews, db.settings, db.interviews],
     async () => {
       await db.messages.clear();
       await db.emotions.clear();
       await db.reviews.clear();
       await db.settings.clear();
+      await db.interviews.clear();
     },
   );
 }

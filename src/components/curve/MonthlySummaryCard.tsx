@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { useCurrentPet } from '@/hooks/useCurrentPet';
 import { useLLMConfig } from '@/hooks/useLLMConfig';
 import { generateMonthlySummary } from '@/lib/llm-client';
+import { getDisplayName } from '@/lib/pets';
 import {
   buildMonthlyInput,
   readSummaryCache,
@@ -54,7 +55,7 @@ export function MonthlySummaryCard() {
       try {
         const text = await generateMonthlySummary(llmConfig, {
           petType: pet.pet,
-          petName: pet.name,
+          petName: getDisplayName(pet),
           emotionTimeline: input.emotionTimeline,
           interviewDigest: input.interviewDigest,
           totalDays: input.totalDays,

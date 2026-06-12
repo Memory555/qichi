@@ -43,12 +43,18 @@ export const ICONS = {
     detail: '/icons/action/detail.svg',
     hide: '/icons/action/hide.svg',
     look: '/icons/action/look.svg',
+    // v2.1：主题切换。按当前主题显示对应 icon（浅色→light，深色→dark）
+    light: '/icons/action/light.svg',
+    dark: '/icons/action/dark.svg',
   },
   deco: {
     cloud1: '/icons/deco/cloud-1.svg',
     cloud2: '/icons/deco/cloud-2.svg',
     moonFull: '/icons/deco/moon-full.svg',
     moonCrescent: '/icons/deco/moon-crescent.svg',
+    // v2 GA：月度 banner 左侧 28×28 装饰小图（按宠物切换）
+    monthlyHintCat: '/icons/deco/monthly-hint-cat.png',
+    monthlyHintDog: '/icons/deco/monthly-hint-dog.png',
   },
 } as const;
 
@@ -64,12 +70,15 @@ export const BRAND = {
   wordmark: '/brand/qichi-wordmark.png', // 「栖迟」艺术字
 } as const;
 
-// ─── 整页背景图（按页切换） ───────────────────
+// ─── 整页背景图（按页切换 + 深色版本） ───────
 
 export const BACKGROUNDS = {
   welcome: '/background/欢迎页.png',
   chat: '/background/聊天页背景.png',
   settings: '/background/设置页背景.png',
+  // v2 GA：深色专版（聊天 / 设置）；欢迎页暂无深色专版，BgImage 走 overlay 兜底
+  chatDark: '/background/dark/聊天页背景.jpg',
+  settingsDark: '/background/dark/设置页背景.jpg',
 } as const;
 
 // ─── Favicon（页面 <head> 引用）──────────────

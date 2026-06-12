@@ -7,7 +7,7 @@
  * 加新宠物 = 在 PETS 加一行；无需散弹改 db/prompts/llm/assets。
  */
 
-import type { PetType, PetName } from './db';
+import type { PetType, PetName, Settings } from './db';
 import type { PetPose } from '@/types';
 import {
   buildCatSystemPrompt,
@@ -28,10 +28,29 @@ export interface PetProfile {
   avatar: string;
   /** 聊天背景浮动爪印素材 URL 列表 */
   paws: readonly string[];
-  /** P1 共情对话 system prompt 构建器 */
-  buildSystemPrompt: (name: PetName) => string;
+  /**
+   * P1 共情对话 system prompt 构建器。
+   * v2：name 类型放宽为 string，以接受用户自定义昵称。
+   */
+  buildSystemPrompt: (name: string) => string;
   /** P1 few-shot 示例 */
   fewShot: ReadonlyArray<FewShotExample>;
+}
+
+/**
+ * v2：宠物显示名优先用 customName，回落到品牌名 name。
+ * 所有 UI / LLM 调用都应通过这个函数取名字，不要直接读 settings.name。
+ *
+ * 接收 `Pick<Settings, 'name' | 'customName'>` 而不是整个 Settings，
+ * 是为了让"打了 customName 的 PETS 表项"也能直接传进来（虽然 PETS 没 customName，
+ * 这里只是放宽类型避免上层临时 cast）。
+ */
+export function getDisplayName(
+  s: Pick<Settings, 'name' | 'customName'> | null | undefined,
+): string {
+  if (!s) return '它';
+  const custom = s.customName?.trim();
+  return custom || s.name;
 }
 
 export const PETS: Record<PetType, PetProfile> = {

@@ -17,7 +17,7 @@ import type {
   ChatCompletionMessageParam,
   ChatCompletionCreateParamsNonStreaming,
 } from 'openai/resources/chat/completions';
-import type { PetType, PetName, EmotionTag, Review } from './db';
+import type { PetType, EmotionTag, Review } from './db';
 import {
   EMOTION_SYSTEM_PROMPT,
   NER_SYSTEM_PROMPT,
@@ -113,7 +113,7 @@ async function callGPT(
 
 export async function translateMessage(
   config: LLMClientConfig,
-  opts: { userMessage: string; petType: PetType; petName: PetName },
+  opts: { userMessage: string; petType: PetType; petName: string },
 ): Promise<string> {
   const profile = PETS[opts.petType];
   return callGPT(config, {
@@ -199,7 +199,8 @@ export async function silentExtract(
 
 export interface MonthlySummaryInput {
   petType: PetType;
-  petName: PetName;
+  /** v2：可能是品牌名（栖栖/迟迟）也可能是用户改名后的昵称 */
+  petName: string;
   emotionTimeline: string;
   interviewDigest: string;
   totalDays: number;

@@ -2,9 +2,18 @@ import type { Config } from 'tailwindcss';
 
 /**
  * 栖迟 · Tailwind 主题配置
- * 完整对应「栖迟-视觉风格说明.md」§2-§6
+ *
+ * v1：完整对应「栖迟-视觉风格说明.md」§2-§6
+ * v2：把"会随主题切换"的色（page/card/subtle/line/ink）改为 CSS 变量驱动，
+ *     深色 token 在 globals.css 的 :root.dark 覆写。
+ *     brand 暖橙系保留色值不变 —— 是 IP 身份，深浅模式都要温暖。
  */
+
+/** rgb(var(--c-x) / <alpha-value>) 语法生成器，让 bg/text/border 都能配合 /opacity 用 */
+const v = (name: string) => `rgb(var(${name}) / <alpha-value>)`;
+
 const config: Config = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{ts,tsx,js,jsx,mdx}',
     './src/components/**/*.{ts,tsx,js,jsx,mdx}',
@@ -13,47 +22,43 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ─── 主色板 ───
+        // ─── 主色板（暖橙 IP 身份，浅/深都不动）───
         brand: {
-          DEFAULT: '#F5A65B', // 主色 暖橙
-          deep: '#E8893A',    // 按钮按下
-          soft: '#FCD9A8',    // 卡片次背景
-          pale: '#FFEFC9',    // hover、tooltip 底
+          DEFAULT: '#F5A65B',
+          deep: '#E8893A',
+          soft: '#FCD9A8',
+          pale: '#FFEFC9',
         },
 
-        // ─── 中性背景 ───
-        page: '#FFF8EE',      // 全局背景奶白
-        card: '#FFFCF5',      // 卡片底
-        subtle: '#FAF1DF',    // 次级背景 / 禁用底
-
-        // ─── 描边 ───
+        // ─── 中性背景 / 描边 / 文字（CSS 变量驱动，深色覆写）───
+        page: v('--c-page'),
+        card: v('--c-card'),
+        subtle: v('--c-subtle'),
         line: {
-          DEFAULT: '#F0E2C9',
+          DEFAULT: v('--c-line'),
           focus: '#F5A65B',
         },
-
-        // ─── 文字 ───
         ink: {
-          DEFAULT: '#5A3E2B', // 文字主（温柔棕）
-          soft: '#9C8472',    // 文字次
-          mute: '#C9BAA8',    // 文字弱 / placeholder
-          disabled: '#DCD0BC',
-          on: '#FFF8EE',      // 反色（主按钮上的奶白文字）
+          DEFAULT: v('--c-ink'),
+          soft: v('--c-ink-soft'),
+          mute: v('--c-ink-mute'),
+          disabled: v('--c-ink-disabled'),
+          on: '#FFF8EE', // 反色（主按钮上的奶白），深浅都用这个保持识别度
         },
 
-        // ─── 情绪辅色（情绪卡片 / 心境标签）───
+        // ─── 情绪辅色（深色场景靠 mix-blend 兜底）───
         mood: {
-          warm: '#FCD9A8',    // 平和
-          pink: '#FFD6CC',    // 委屈、柔软
-          blue: '#C7D6E0',    // 低落、迷茫
-          green: '#D7E5C9',   // 释怀
-          purple: '#E3D5E8',  // 复杂
+          warm: '#FCD9A8',
+          pink: '#FFD6CC',
+          blue: '#C7D6E0',
+          green: '#D7E5C9',
+          purple: '#E3D5E8',
         },
 
         // ─── 语义色（克制使用）───
         success: '#A8C49A',
         notice: '#E8B86F',
-        danger: '#D67A5B', // 暖红，不用纯红
+        danger: '#D67A5B',
 
         // ─── 心境标签 chip 文字 ───
         chip: {
@@ -64,7 +69,6 @@ const config: Config = {
       },
 
       fontFamily: {
-        // UI 主体（圆润现代黑体）
         ui: [
           'OPPO Sans',
           'HarmonyOS Sans',
@@ -73,11 +77,8 @@ const config: Config = {
           'system-ui',
           'sans-serif',
         ],
-        // 英文 Body
         en: ['Quicksand', 'Nunito', 'system-ui', 'sans-serif'],
-        // 英文 Display
         display: ['Comfortaa', 'Quicksand', 'sans-serif'],
-        // 极少量场景：诗经引用专用宋体（仅 13px 以下）
         cite: ['"Source Han Serif"', '"Songti SC"', 'STSong', 'serif'],
       },
 
@@ -86,9 +87,7 @@ const config: Config = {
         h1: ['24px', { lineHeight: '1.5', fontWeight: '500' }],
         h2: ['20px', { lineHeight: '1.5', fontWeight: '500' }],
         h3: ['17px', { lineHeight: '1.5', fontWeight: '500' }],
-        // 情感内容（Light 字重 + 松行高）
         'body-em': ['16px', { lineHeight: '1.8', fontWeight: '300' }],
-        // UI 正文（Regular）
         'body-ui': ['15px', { lineHeight: '1.7' }],
         caption: ['13px', { lineHeight: '1.6' }],
         mini: ['11px', { lineHeight: '1.5' }],
@@ -124,7 +123,6 @@ const config: Config = {
         page: '360ms',
       },
 
-      // 宠物 idle 呼吸动画
       animation: {
         breath: 'breath 4s ease-in-out infinite',
         'fade-in': 'fadeIn 220ms cubic-bezier(0.22, 1, 0.36, 1)',

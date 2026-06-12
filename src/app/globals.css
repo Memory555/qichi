@@ -30,17 +30,44 @@
 }
 
 /* ────────────────────────────────────────
-   全局兜底
+   主题 token（v2 新增 · 浅 / 深 双色）
+   - brand 暖橙系不在这里，是 IP 身份，两种主题都用同一色
+   - 这里只放"背景 / 描边 / 文字"四档，五个主页面所有中性色都从这里来
+   - rgb 三元组形式，配合 tailwind 的 rgb(var(--c-x) / <alpha-value>) 使用
    ──────────────────────────────────────── */
 
 :root {
+  --c-page: 255 248 238;          /* #FFF8EE 奶白 */
+  --c-card: 255 252 245;          /* #FFFCF5 卡片底 */
+  --c-subtle: 250 241 223;        /* #FAF1DF 次级 */
+  --c-line: 240 226 201;          /* #F0E2C9 描边 */
+  --c-ink: 90 62 43;              /* #5A3E2B 主文字 温柔棕 */
+  --c-ink-soft: 156 132 114;      /* #9C8472 次文字 */
+  --c-ink-mute: 201 186 168;      /* #C9BAA8 弱 / placeholder */
+  --c-ink-disabled: 220 208 188;  /* #DCD0BC 禁用 */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* 深色 token：保持暖色调（避免纯灰），深棕底 + 奶白橙文字 */
+:root.dark {
+  --c-page: 31 26 21;             /* #1F1A15 深棕底（带暖意） */
+  --c-card: 42 35 29;             /* #2A231D 卡片底 */
+  --c-subtle: 54 45 37;           /* #362D25 次级 */
+  --c-line: 74 60 48;             /* #4A3C30 描边 */
+  --c-ink: 240 226 201;           /* #F0E2C9 主文字（反相用 ink-mute 的浅色） */
+  --c-ink-soft: 197 176 151;      /* #C5B097 次文字 */
+  --c-ink-mute: 140 120 96;       /* #8C7860 弱文字 */
+  --c-ink-disabled: 107 92 74;    /* #6B5C4A 禁用 */
+}
+
+/* ────────────────────────────────────────
+   全局兜底
+   ──────────────────────────────────────── */
+
 html,
 body {
-  background: theme('colors.page');
-  color: theme('colors.ink.DEFAULT');
+  background: rgb(var(--c-page));
+  color: rgb(var(--c-ink));
   font-family: theme('fontFamily.ui');
   letter-spacing: 0.02em;
   -webkit-font-smoothing: antialiased;
@@ -72,7 +99,7 @@ body {
 /* 选中态柔和暖色 */
 ::selection {
   background: theme('colors.brand.soft');
-  color: theme('colors.ink.DEFAULT');
+  color: rgb(var(--c-ink));
 }
 
 /* ────────────────────────────────────────

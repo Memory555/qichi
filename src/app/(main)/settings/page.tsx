@@ -4,14 +4,20 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AppBar } from '@/components/layout/AppBar';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { useCurrentPet } from '@/hooks/useCurrentPet';
-import { PETS } from '@/lib/pets';
-import { exportAllData, resetAllData, updateLLMConfig } from '@/lib/db';
+import { PETS, getDisplayName } from '@/lib/pets';
+import {
+  exportAllData,
+  resetAllData,
+  updateCustomName,
+  updateLLMConfig,
+} from '@/lib/db';
 import { clearAllSummaryCache } from '@/lib/monthly';
 import { pingLLM } from '@/lib/llm-client';
 import { cn } from '@/lib/utils';
@@ -76,6 +82,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const { pet } = useCurrentPet();
   const [switchOpen, setSwitchOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameText, setRenameText] = useState('');
   const [clearOpen, setClearOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
@@ -113,6 +121,7 @@ export default function SettingsPage() {
 
   if (!pet) return null;
   const profile = PETS[pet.pet];
+  const displayName = getDisplayName(pet);
 
   const handleSaveLLM = async () => {
     await updateLLMConfig({
@@ -173,17 +182,27 @@ export default function SettingsPage() {
 
   return (
     <>
-      <AppBar center={<span className="text-h3 text-ink">我</span>} />
+      <AppBar
+        center={<span className="text-h3 text-ink">我</span>}
+        right={<ThemeToggle />}
+      />
 
       <div className="scroll-soft flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-6">
         {/* 宠物身份 */}
         <div className="flex flex-col items-center gap-2 py-4">
-          <Icon src={profile.avatar} size={80} alt={pet.name} />
-          <h2 className="text-h2 text-ink">{pet.name}</h2>
+          <Icon src={profile.avatar} size={80} alt={displayName} />
+          <h2 className="text-h2 text-ink">{displayName}</h2>
           <p className="text-caption text-ink-mute">在这儿陪你</p>
         </div>
 
-        <Section title={`我和${pet.name}`}>
+        <Section title={`我和${displayName}`}>
+          <SettingsRow
+            label="换个名字"
+            onClick={() => {
+              setRenameText(pet.customName ?? '');
+              setRenameOpen(true);
+            }}
+          />
           <SettingsRow
             label="换一只小动物"
             onClick={() => setSwitchOpen(true)}
@@ -248,6 +267,15 @@ export default function SettingsPage() {
                     placeholder="https://api.chatanywhere.tech/v1"
                     autoComplete="off"
                   />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBaseUrl('https://api.chatanywhere.tech/v1')
+                    }
+                    className="text-mini text-brand hover:underline"
+                  >
+                    一键填 chatanywhere 代理
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -345,6 +373,32 @@ export default function SettingsPage() {
           数据只在你这台设备上 · 阶段 F
         </p>
       </div>
+
+      {/* 换名字 */}
+      <Dialog
+        open={renameOpen}
+        onClose={() => setRenameOpen(false)}
+        title={`给 ${profile.name} 起个名字`}
+        body={
+          <div className="space-y-3">
+            <p className="text-caption text-ink-soft">
+              留空就叫回 「{profile.name}」。最多 12 个字。
+            </p>
+            <Input
+              value={renameText}
+              onChange={(e) => setRenameText(e.target.value.slice(0, 12))}
+              placeholder={profile.name}
+              maxLength={12}
+              autoFocus
+            />
+          </div>
+        }
+        confirmLabel="保存"
+        onConfirm={async () => {
+          await updateCustomName(renameText);
+          setRenameOpen(false);
+        }}
+      />
 
       {/* 换宠物确认 */}
       <Dialog
